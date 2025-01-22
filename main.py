@@ -8,7 +8,7 @@ from ToolBar import Toolbar
 from DrawingWidget import DrawingWidget
 from DataHandler import DataHandler
 
-FILE_NAME = "shape-dependent-tracking-"
+FILE_NAME = "results/shape-dependent-tracking-"
 
 class MainWindow(QMainWindow):
     """Main application window."""
