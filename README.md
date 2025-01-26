@@ -28,7 +28,7 @@ Visit [Wacom Support - Drivers](https://www.wacom.com/en-us/support/product-supp
 ### Staring the 
 
 - #### Start the Application
-  Run the `shape-tracking.exe` file.
+  Run main.py
 - #### Enter Subject ID
   Input the subject's ID in the "Enter ID" text box.
 - #### Begin the Experiment
@@ -44,6 +44,17 @@ The subject's pen gestures on the tablet screen will be recorded and displayed.
 ### Experimenter Controls
 - **Press Enter**: Clears the screen and starts a new trial.
 - **Press Esc**: Ends the experiment.
+- 
+---
+## Results
+The results of each run are saved to a local folder `./results/` under the running directory. 
+Each run is stored as a JSON file with the filename: DateTime_SubjectID_shape_tracking.json
+
+Each JSON file contains the following data sampled at a rate of **140 Hz**:
+- **x, y coordinates**: Screen coordinates in a resolution of **1920x1080**.
+- **x, y pen tilt**: The tilt of the pen in both the x and y axes.
+- **Pen pressure**: The pressure of the pen, ranging from **0 to 1**.
+- **Timestamp**: The timestamp for each sample, in a consistent format.
 
 ---
 ## Contact
