@@ -12,7 +12,7 @@ from ToolBar import Toolbar
 from DrawingWidget import DrawingWidget
 from DataHandler import DataHandler
 
-FILE_NAME = "_shape_dependent_tracking.json"
+FILE_NAME = "_shape_tracking.json"
 FOLDER = "results/"
 
 
