@@ -48,7 +48,7 @@ The subject's pen gestures on the tablet screen will be recorded and displayed.
 ---
 ## Results
 The results of each run are saved to a local folder `./results/` under the running directory. 
-Each run is stored as a JSON file with the filename: `DateTime_SubjectID_shape_tracking.json`.
+Each run is stored as a JSON file with the filename: `DateTime_SubjectID_shape_tracking.json`
 
 Each JSON file contains the following data sampled at a rate of **140 Hz**:
 - **x, y coordinates**: Screen coordinates in a resolution of **1920x1080**.
