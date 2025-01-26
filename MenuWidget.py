@@ -24,7 +24,7 @@ class MenuWidget(QWidget):
 
         # Participant Name Input
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Enter your name...")
+        self.name_input.setPlaceholderText("Enter ID...")
         self.name_input.setFixedSize(300, 50)  # Set button size (width: 150px, height: 50px)
         self.name_input.setStyleSheet("font-size: 16px;")
         layout.addWidget(self.name_input)
