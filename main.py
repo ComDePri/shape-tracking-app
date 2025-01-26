@@ -1,5 +1,8 @@
 import os
 import sys
+import time
+from datetime import datetime
+
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QLabel
 )
@@ -9,7 +12,22 @@ from ToolBar import Toolbar
 from DrawingWidget import DrawingWidget
 from DataHandler import DataHandler
 
-FILE_NAME = "results/shape-dependent-tracking-"
+FILE_NAME = "_shape_dependent_tracking.json"
+FOLDER = "results/"
+
+
+def create_results_folder():
+    """
+    Creates a folder named 'results' in the current working directory.
+    If the folder already exists, it does nothing.
+    """
+    folder_name = "results"
+    try:
+        os.makedirs(folder_name, exist_ok=True)
+        print(f"Folder '{folder_name}' created successfully or already exists.")
+    except Exception as e:
+        print(f"An error occurred while creating the folder: {e}")
+
 
 class MainWindow(QMainWindow):
     """Main application window."""
@@ -33,7 +51,9 @@ class MainWindow(QMainWindow):
 
     def start_drawing_task(self, participant_name):
         """Switch to the DrawingWidget."""
-        self.data_handler = DataHandler(participant_name, FILE_NAME + participant_name + ".json")
+
+        current_time = datetime.now().strftime('%Y%m%d%H%M%S') + "_"
+        self.data_handler = DataHandler(participant_name, FOLDER + current_time + participant_name + FILE_NAME)
         self.drawing_widget = DrawingWidget(self.data_handler)
 
         # Create a toolbar for the drawing widget
@@ -42,18 +62,6 @@ class MainWindow(QMainWindow):
 
         self.stack.addWidget(self.drawing_widget)
         self.stack.setCurrentWidget(self.drawing_widget)
-
-def create_results_folder():
-    """
-    Creates a folder named 'results' in the current working directory.
-    If the folder already exists, it does nothing.
-    """
-    folder_name = "results"
-    try:
-        os.makedirs(folder_name, exist_ok=True)
-        print(f"Folder '{folder_name}' created successfully or already exists.")
-    except Exception as e:
-        print(f"An error occurred while creating the folder: {e}")
 
 
 def main():

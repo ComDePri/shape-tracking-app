@@ -122,6 +122,6 @@ class DrawingWidget(QWidget):
         self.saving_label.show()  # Display the label
         self.saving_label.repaint()  # Force the label to redraw immediately
         QApplication.processEvents()  # Process any pending GUI events
-        time.sleep(2)  # Wait for 2 seconds to show the label
+        time.sleep(1)  # Wait for 1 seconds to show the label
         self.data_handler.close_file()  # Close the file
         QApplication.quit()  # Quit the application

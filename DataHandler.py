@@ -19,7 +19,7 @@ NEW_SECTION_FORMAT = """
 
 class DataHandler():
 
-    def __init__(self, pid, output_file):
+    def __init__(self, pid: str, output_file: str, s3_flag: bool = False):
         self.pid = pid
         self.start_time = str(datetime.datetime.now())
         self.buffer = []
@@ -27,6 +27,7 @@ class DataHandler():
         self.output_stream = open(output_file, 'w', encoding='utf-8')
         self.section_num = 0
         self.__write_metadata()
+        self.s3_flag = s3_flag
 
     def start_new_section(self, info, is_first=False):
         if not is_first:
@@ -36,9 +37,7 @@ class DataHandler():
 
     def write_data(self, data):
         """
-
-        :param data:
-        :return:
+        write data to file
         """
         self.buffer.append(data)
 
@@ -49,12 +48,12 @@ class DataHandler():
         self.__flush_buffer()
         self.__handle_closing_text()
         self.output_stream.close()
-        self.upload_data()
+        if self.s3_flag:
+            self.upload_data()
 
     def __flush_buffer(self):
         """
-
-        :return:
+        flush the buffer to file and start new buffer
         """
         if len(self.buffer) > 0:
             sep = ',\n' + '\t'*4
@@ -105,6 +104,9 @@ class DataHandler():
             return None
 
     def __do_upload_data(self):
+        """
+        recursive call for uploading data
+        """
 
         url = 'https://hss74dd1ed.execute-api.us-east-1.amazonaws.com/dev/'
         headers = {
@@ -135,6 +137,9 @@ class DataHandler():
             raise requests.exceptions.RequestException
 
     def upload_data(self):
+        """
+        upload data to s3
+        """
         retries = 0
         max_retries = 5
         backoff_factor = 2  # Exponential backoff multiplier
