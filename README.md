@@ -29,10 +29,8 @@ Visit [Wacom Support - Drivers](https://www.wacom.com/en-us/support/product-supp
 
 - #### Start the Application
   Run the `shape-tracking.exe` file.
-
 - #### Enter Subject ID
   Input the subject's ID in the "Enter ID" text box.
-
 - #### Begin the Experiment
   Click the "Start" button or press the Enter key to start the experiment.
 
