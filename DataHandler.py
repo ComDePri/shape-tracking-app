@@ -42,7 +42,7 @@ class DataHandler():
         """
         self.buffer.append(data)
 
-        if len(self.buffer) > 1000:
+        if len(self.buffer) > 700:
             self.__flush_buffer()
 
     def close_file(self):

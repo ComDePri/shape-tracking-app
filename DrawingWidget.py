@@ -1,18 +1,27 @@
 import time
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QPainter, QPen, QCursor
+from PyQt5.QtWidgets import QWidget, QShortcut, QApplication, QLabel
+from PyQt5.QtGui import QPainter, QPen, QCursor, QKeySequence
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from DataHandler import DataHandler
+
+NO_DATA = -99999
 
 class DrawingWidget(QWidget):
     """Widget for the drawing task."""
     def __init__(self, data_handler: DataHandler):
         super().__init__()
-        self.setFixedSize(800, 600)
+        self.showFullScreen()
         self.drawing = False
         self.last_point = QPoint()
-        self.pen_pressure = 1.0
         self.lines = []
+
+        #mesures
+        self.posX = NO_DATA
+        self.posY = NO_DATA
+        self.pen_tiltX = NO_DATA
+        self.pen_tiltY = NO_DATA
+        self.pen_pressure = NO_DATA
+        self.time_stamp = NO_DATA
 
         # Timer for sampling cursor positions
         self.sampling_timer = QTimer(self)
@@ -21,6 +30,20 @@ class DrawingWidget(QWidget):
         #start data handler
         self.data_handler = data_handler
         self.data_handler.start_new_section("", True)
+
+        # Shortcuts
+        self.next_shortcut = QShortcut(QKeySequence("Return"), self)  # Enter key
+        self.next_shortcut.activated.connect(self.clear_canvas)
+
+        self.exit_shortcut = QShortcut(QKeySequence("Escape"), self)  # Escape key
+        self.exit_shortcut.activated.connect(self.close_file)
+
+        # "Saving Data" label
+        self.saving_label = QLabel("Saving Data", self)
+        self.saving_label.setStyleSheet("color: black; font-size: 48px; font-weight: bold; background-color: white;")
+        self.saving_label.setAlignment(Qt.AlignCenter)
+        self.saving_label.setGeometry(0, 0, self.width(), self.height())
+        self.saving_label.hide()  # Initially hidden
 
     def paintEvent(self, event):
         """Renders the lines on the widget."""
@@ -35,22 +58,41 @@ class DrawingWidget(QWidget):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.last_point = event.pos()
-            self.sampling_timer.start(1000 // 140)  # Start sampling at 140Hz
+            self.sampling_timer.start(1)  # Start sampling at 140Hz
 
-    def mouseMoveEvent(self, event):
-        """Draw line segments as the mouse/pen moves."""
+    def tabletEvent(self, event):
+        """Handle tablet events for capturing pen pressure."""
         if self.drawing:
-            pressure = event.pressure() if hasattr(event, 'pressure') else 1.0
-            self.pen_pressure = pressure
+            self.pen_pressure = event.pressure()
+            self.pen_tiltX = event.xTilt()
+            self.pen_tiltY = event.yTilt()
+            self.posX = event.pos().x()
+            self.posY = event.pos().y()
+
             current_point = event.pos()
             line = {
                 'color': Qt.black,
-                'width': 2 * self.pen_pressure,
+                'width': 4 * self.pen_pressure,
                 'points': [self.last_point, current_point]
             }
+
             self.lines.append(line)
             self.last_point = current_point
             self.update()
+
+    # def mouseMoveEvent(self, event):
+    #     """Draw line segments as the mouse/pen moves."""
+    #     if self.drawing:
+    #         current_point = event.pos()
+    #         line = {
+    #             'color': Qt.black,
+    #             'width': 2 * self.pen_pressure,
+    #             'points': [self.last_point, current_point]
+    #         }
+    #
+    #         self.lines.append(line)
+    #         self.last_point = current_point
+    #         self.update()
 
     def mouseReleaseEvent(self, event):
         """Stop drawing and sampling when the mouse/pen is released."""
@@ -60,9 +102,15 @@ class DrawingWidget(QWidget):
 
     def sample_cursor_position(self):
         """Sample the cursor position and store it."""
-        cursor_pos = self.mapFromGlobal(QCursor.pos())  # Map global to local widget coordinates
+
         timestamp = time.time()
-        self.data_handler.write_data({"X":cursor_pos.x(), "Y":cursor_pos.y(), "Timestamp":timestamp})
+        self.data_handler.write_data({"posX": self.posX,
+                                      "posY": self.posY,
+                                      "tiltX": self.pen_tiltX,
+                                      "tiltY": self.pen_tiltY,
+                                      "pressure": self.pen_pressure,
+                                      "Timestamp":timestamp
+                                      })
 
     def clear_canvas(self):
         """Clear the canvas and reset sampling data."""
@@ -71,4 +119,9 @@ class DrawingWidget(QWidget):
         self.update()
 
     def close_file(self):
-        self.data_handler.close_file()
+        self.saving_label.show()  # Display the label
+        self.saving_label.repaint()  # Force the label to redraw immediately
+        QApplication.processEvents()  # Process any pending GUI events
+        time.sleep(2)  # Wait for 2 seconds to show the label
+        self.data_handler.close_file()  # Close the file
+        QApplication.quit()  # Quit the application

@@ -1,6 +1,7 @@
+import os
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QStackedWidget
+    QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QLabel
 )
 from PyQt5.QtCore import Qt
 from MenuWidget import MenuWidget
@@ -19,7 +20,7 @@ class MainWindow(QMainWindow):
         self.drawing_widget = None
         self.data_handler = None
         self.setWindowTitle("Drawing Task")
-        self.setFixedSize(800, 600)
+        self.showFullScreen()
 
         # Stacked Widget to manage multiple screens
         self.stack = QStackedWidget()
@@ -36,15 +37,27 @@ class MainWindow(QMainWindow):
         self.drawing_widget = DrawingWidget(self.data_handler)
 
         # Create a toolbar for the drawing widget
-        self.toolbar = Toolbar(self.drawing_widget)
-        self.addToolBar(Qt.LeftToolBarArea, self.toolbar)
+        # self.toolbar = Toolbar(self.drawing_widget)
+        # self.addToolBar(Qt.LeftToolBarArea, self.toolbar)
 
         self.stack.addWidget(self.drawing_widget)
         self.stack.setCurrentWidget(self.drawing_widget)
 
+def create_results_folder():
+    """
+    Creates a folder named 'results' in the current working directory.
+    If the folder already exists, it does nothing.
+    """
+    folder_name = "results"
+    try:
+        os.makedirs(folder_name, exist_ok=True)
+        print(f"Folder '{folder_name}' created successfully or already exists.")
+    except Exception as e:
+        print(f"An error occurred while creating the folder: {e}")
 
 
 def main():
+    create_results_folder()
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
