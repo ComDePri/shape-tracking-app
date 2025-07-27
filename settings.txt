@@ -1,0 +1,6 @@
+stimuli_duration=15.0
+drawing_duration=15.0
+corner_location=0,0
+corner_scale=1.67
+shapes=5,8
+speeds=fast,medium,slow

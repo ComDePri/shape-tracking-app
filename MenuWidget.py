@@ -1,7 +1,11 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, QShortcut
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QApplication, QShortcut
+from PyQt5.QtWidgets import QPushButton
+from SettingsWindow import SettingsWindow
+from settings_singleton import Settings
 
+settings = Settings()
 
 class MenuWidget(QWidget):
     """Menu interface for starting the drawing task."""
@@ -13,8 +17,6 @@ class MenuWidget(QWidget):
         # Layout for the menu
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
-
-
 
         # Headline
         headline = QLabel("Drawing Task")
@@ -36,6 +38,15 @@ class MenuWidget(QWidget):
         start_button.clicked.connect(self.start_task)
         layout.addWidget(start_button)
 
+        # Settings Button
+        self.settings_button = QPushButton("⚙ Settings")
+        self.settings_button.setStyleSheet("font-size: 16px; padding: 10px;")
+        self.settings_button.setFixedSize(300, 50)
+        self.settings_button.clicked.connect(self.open_settings_window)
+        self.settings_window = SettingsWindow(self)  # initialize once
+        layout.addWidget(self.settings_button)
+
+        # Exit Button
         exit_button = QPushButton("Exit")
         exit_button.setStyleSheet("font-size: 16px; padding: 10px;")
         exit_button.setFixedSize(300, 50)  # Set button size (width: 150px, height: 50px)
@@ -59,6 +70,11 @@ class MenuWidget(QWidget):
         else:
             # Highlight the input field if empty
             self.name_input.setStyleSheet("border: 2px solid red; font-size: 16px;")
+
+
+    def open_settings_window(self):
+        if self.settings_window.exec_():
+            settings.load_from_file()
 
     def exit_application(self):
         """Exit the application."""

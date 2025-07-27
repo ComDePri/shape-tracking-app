@@ -1,14 +1,9 @@
 import os
 import sys
-import time
 from datetime import datetime
 
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QLabel
-)
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from MenuWidget import MenuWidget
-from ToolBar import Toolbar
 from DrawingWidget import DrawingWidget
 from DataHandler import DataHandler
 
@@ -56,15 +51,19 @@ class MainWindow(QMainWindow):
         self.data_handler = DataHandler(participant_name, FOLDER + current_time + participant_name + FILE_NAME)
         self.drawing_widget = DrawingWidget(self.data_handler)
 
-        # Create a toolbar for the drawing widget
-        # self.toolbar = Toolbar(self.drawing_widget)
-        # self.addToolBar(Qt.LeftToolBarArea, self.toolbar)
-
         self.stack.addWidget(self.drawing_widget)
         self.stack.setCurrentWidget(self.drawing_widget)
 
 
 def main():
+    import sys
+    import traceback
+
+    def log_uncaught_exceptions(ex_cls, ex, tb):
+        text = f"Uncaught exception:\n{''.join(traceback.format_tb(tb))}\n{ex_cls.__name__}: {ex}"
+        print(text)
+
+    sys.excepthook = log_uncaught_exceptions
     create_results_folder()
     app = QApplication(sys.argv)
     window = MainWindow()

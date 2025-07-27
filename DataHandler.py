@@ -1,7 +1,6 @@
 import datetime
 import json
 import time
-
 import requests
 
 BUCKET_NAME = 'shape-dependent-tracking-2025'
@@ -29,19 +28,22 @@ class DataHandler():
         self.__write_metadata()
         self.s3_flag = s3_flag
 
-    def start_new_section(self, info, is_first=False):
-        if not is_first:
+    def start_new_section(self, info, first=False):
+        if not first:
             self.__close_section()
+        self.buffer = []
         self.output_stream.write("\n\t\t{" + NEW_SECTION_FORMAT.format(self.section_num, info))
         self.section_num += 1
+
 
     def write_data(self, data):
         """
         write data to file
         """
+        print(data)
         self.buffer.append(data)
 
-        if len(self.buffer) > 700:
+        if len(self.buffer) > 10:
             self.__flush_buffer()
 
     def close_file(self):
@@ -50,6 +52,7 @@ class DataHandler():
         self.output_stream.close()
         if self.s3_flag:
             self.upload_data()
+        self.buffer = []
 
     def __flush_buffer(self):
         """
@@ -66,6 +69,12 @@ class DataHandler():
 
             # Clear the buffer
             self.buffer = []
+
+    def clear_buffer(self):
+        """
+        clear the buffer
+        """
+        self.buffer = []
 
     def __write_metadata(self):
         data = "{" + META_DATA_FORMAT.format(self.pid, self.start_time)
