@@ -3,9 +3,15 @@ import sys
 from datetime import datetime
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
+
+import settings_singleton
 from MenuWidget import MenuWidget
 from DrawingWidget import DrawingWidget
 from DataHandler import DataHandler
+from Instrucations import InstructionsWidget
+from settings_singleton import Settings
+
+
 
 FILE_NAME = "_shape_tracking.json"
 FOLDER = "results/"
@@ -33,7 +39,7 @@ class MainWindow(QMainWindow):
         self.drawing_widget = None
         self.data_handler = None
         self.setWindowTitle("Drawing Task")
-        self.showFullScreen()
+        #self.showFullScreen()
 
         # Stacked Widget to manage multiple screens
         self.stack = QStackedWidget()
@@ -43,14 +49,24 @@ class MainWindow(QMainWindow):
         self.menu = MenuWidget(self.start_drawing_task)
         self.stack.addWidget(self.menu)
 
-
     def start_drawing_task(self, participant_name):
-        """Switch to the DrawingWidget."""
+        self.participant_name = participant_name
 
+        settings = Settings()
+        if settings.get_show_intro():
+            self.instructions = InstructionsWidget()
+            self.instructions.finished.connect(self.launch_drawing_widget)
+            self.stack.addWidget(self.instructions)
+            self.stack.setCurrentWidget(self.instructions)
+        else:
+            self.launch_drawing_widget()
+
+
+    def launch_drawing_widget(self):
         current_time = datetime.now().strftime('%Y%m%d%H%M%S') + "_"
-        self.data_handler = DataHandler(participant_name, FOLDER + current_time + participant_name + FILE_NAME)
+        self.data_handler = DataHandler(self.participant_name,
+                                        FOLDER + current_time + self.participant_name + FILE_NAME)
         self.drawing_widget = DrawingWidget(self.data_handler)
-
         self.stack.addWidget(self.drawing_widget)
         self.stack.setCurrentWidget(self.drawing_widget)
 

@@ -9,7 +9,7 @@ from svgpathtools import parse_path
 class AnimationWidget(QWidget):
     done = pyqtSignal()
 
-    def __init__(self, parent=None, scale: float = 1.0, corner: bool = False):
+    def __init__(self, parent=None, scale: float = 1.0, template: bool = False):
         super().__init__(parent)
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -19,18 +19,21 @@ class AnimationWidget(QWidget):
         self.flip_x = True
         self.svg_size = (200, 240)
         self.scale = scale
-        self.corner = corner
+        self.template = template
 
-        if corner:
-            self.top_left = QPointF(90 * scale, 110 * scale)
+        if template:
+            self.top_left = QPointF(310, 500)
         else:
-            self.top_left = QPointF(950, 500)
+            self.top_left = QPointF(1250, 500)
 
         self.label_top = QLabel(self)
-        self.label_bottom = QLabel(self)
-        for lbl, size in [(self.label_top, 32), (self.label_bottom, 28)]:
-            lbl.setAlignment(Qt.AlignCenter)
-            lbl.setStyleSheet(f"color: black; font-size: {size}px; background: transparent")
+        self.label_top.setStyleSheet(f"color: black; font-size: 28px; background: transparent")
+        self.label_top.setAlignment(Qt.AlignCenter)
+
+        #self.label_bottom = QLabel(self)
+        # for lbl, size in [(self.label_top, 32), (self.label_bottom, 28)]:
+        #     lbl.setAlignment(Qt.AlignCenter)
+        #     lbl.setStyleSheet(f"color: black; font-size: {size}px; background: transparent")
 
         self.animated_path = QPainterPath()
         self.animated_points = []
@@ -56,12 +59,12 @@ class AnimationWidget(QWidget):
             "slow": (2100, 2800, "בקצב איטי")
         }
         animation_ms, pause_ms, label = speed_map.get(speed, (0, 100, ""))
-        top_label = "הצורה הבאה:" if label else ""
+        top_label = f"אנא צייר את הצורה הבאה {label}" if label else ""
 
-        self.label_top.setText("" if self.corner else top_label)
-        self.label_bottom.setText("" if self.corner else label)
-        pause_ms = 120000 if self.corner else pause_ms
-        reposition = not self.corner
+        self.label_top.setText("" if self.template else top_label)
+        #self.label_bottom.setText("" if self.template else label)
+        pause_ms = 120000 if self.template else pause_ms
+        reposition = True
 
         self._show_svg(filepath, animation_ms, pause_ms, self.scale, reposition)
 
@@ -74,16 +77,19 @@ class AnimationWidget(QWidget):
         self.animated_index = 0
         self.animated_path = QPainterPath(self.animated_points[0])
 
-        if animation_ms > 0:
-            self.anim_timer.start(int(animation_ms / len(self.animated_points)))
-        else:
-            for pt in self.animated_points[1:]:
-                self.animated_path.lineTo(pt)
+        for pt in self.animated_points[1:]:
+            self.animated_path.lineTo(pt)
+
+        # if animation_ms > 0:
+        #     self.anim_timer.start(int(animation_ms / len(self.animated_points)))
+        # else:
+        #     for pt in self.animated_points[1:]:
+        #         self.animated_path.lineTo(pt)
 
         self.hold_timer.start(animation_ms + pause_ms)
         self._update_label_positions()
         self.label_top.show()
-        self.label_bottom.show()
+        #self.label_bottom.show()
         self.show()
         self.update()
 
@@ -152,28 +158,42 @@ class AnimationWidget(QWidget):
             self.animated_points = []
 
     def _advance_animation(self):
-        if self.animated_index < len(self.animated_points):
-            self.animated_path.lineTo(self.animated_points[self.animated_index])
-            self.animated_index += 1
-            self.update()
-        else:
-            self.anim_timer.stop()
+
+        self.anim_timer.stop()
+
+        # if self.animated_index < len(self.animated_points):
+        #     self.animated_path.lineTo(self.animated_points[self.animated_index])
+        #     self.animated_index += 1
+        #     self.update()
+        # else:
+        #     self.anim_timer.stop()
 
     def paintEvent(self, event):
         if not self.animated_path.isEmpty():
             painter = QPainter(self)
-            painter.setPen(QPen(Qt.blue, 3))
+
+            if self.template:
+                painter.setPen(QPen(Qt.blue, 3))
+            else:
+                painter.setPen(QPen(Qt.black, 3))
+
             painter.drawPath(self.animated_path)
 
     def _update_label_positions(self):
         width = self.width()
+        height = self.height()
+
+        right_third_x = int(width * 2 / 3)
+        third_width = int(width / 3)
+
         center_y = self.top_left.y() + self.svg_size[1] * self.scale / 2
-        self.label_top.setGeometry(0, int(center_y - 470), width, 50)
-        self.label_bottom.setGeometry(0, int(center_y + 20), width, 50)
+
+        self.label_top.setGeometry(right_third_x, int(center_y - 470), third_width, 50)
+        #self.label_bottom.setGeometry(right_third_x, int(center_y + 20), third_width, 50)
 
     def _end_presentation(self):
         self.label_top.hide()
-        self.label_bottom.hide()
+        #self.label_bottom.hide()
         self.done.emit()
         self.hide()
 
@@ -183,6 +203,6 @@ class AnimationWidget(QWidget):
         self.animated_path = QPainterPath()
         self.animated_points.clear()
         self.label_top.hide()
-        self.label_bottom.hide()
+        #self.label_bottom.hide()
         self.update()
         self.hide()

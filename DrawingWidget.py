@@ -1,7 +1,7 @@
 import time
-from PyQt5.QtWidgets import QWidget, QShortcut, QApplication, QLabel
+from PyQt5.QtWidgets import QWidget, QShortcut, QApplication, QLabel, QPushButton
 from PyQt5.QtGui import QPainter, QPen, QKeySequence
-from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF
+from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF, QRect
 from PyQt5.QtSvg import QSvgRenderer
 from AnimationWidget import AnimationWidget
 import random
@@ -19,6 +19,7 @@ class DrawingWidget(QWidget):
         self.showFullScreen()
         self.drawing = False
         self.play = False
+        self.first_shape = True
         self.last_point = QPoint()
         self.lines = []
 
@@ -45,8 +46,9 @@ class DrawingWidget(QWidget):
         self.exit_shortcut = QShortcut(QKeySequence("Escape"), self)  # Escape key
         self.exit_shortcut.activated.connect(self.close_file)
 
+        # timers
         self.drawing_duration = int(settings.get_drawing_duration() * 1000)  # Convert to milliseconds
-        self.transition_duration = int(settings.get_stimuli_duration() * 1000)  # Convert to milliseconds
+        self.transition_duration = int(settings.get_transition_duration() * 1000)  # Convert to milliseconds
 
         self.drawing_timer = QTimer(self)
         self.drawing_timer.setSingleShot(True)
@@ -58,6 +60,33 @@ class DrawingWidget(QWidget):
         #self.transition_timer.timeout.connect(self.clear_canvas)
         self.transition_timer.timeout.connect(self.start_visual_mask)
         self.transition_timer.setInterval(self.transition_duration)
+
+        # next shape window
+
+        text = """
+<div dir="rtl" style="text-align: left; font-size: 18px; margin: 40px;">
+    <b>דוגמה לציור שיוצג</b><br><br>
+
+    בתמונה הקרובה תראו דוגמה לצורה – לדוגמה, <b>אליפסה</b>.<br>
+    תתבקשו לצייר אותה בקצב שמופיע על המסך – כמו <b>"קצב בינוני"</b>.<br><br>
+
+    מטרתכם היא לחזור על הציור <b>בדיוק מירבי</b> ולמשך הזמן שיופיע על המסך.<br>
+    אנא התמקדו והשתדלו לדייק ככל שניתן.
+</div>
+"""
+
+        self.ready_prompt = QLabel(text, self)
+        self.ready_prompt.setStyleSheet(f"color: black; font-size: 28px; background: transparent")
+        self.ready_prompt.setAlignment(Qt.AlignCenter)
+        self.ready_prompt.hide()
+
+        self.ok_button = QPushButton("המשך", self)
+        self.ok_button.setStyleSheet("font-size: 18px; padding: 12px;")
+        self.ok_button.setFixedSize(200, 50)
+        self.ok_button.clicked.connect(self._on_ready_clicked)
+        self.ok_button.hide()
+
+        self._position_ready_ui()  # <-- place inside right rectangle
 
         # Initialize shapes from settings
         self.shapes = settings.get_selected_shapes()
@@ -74,14 +103,15 @@ class DrawingWidget(QWidget):
 
         # Corner template
         corner_scale = settings.get_corner_scale()
-        self.corner_template = AnimationWidget(self, scale=corner_scale, corner=True)
+        self.corner_template = AnimationWidget(self, scale=2.0, template=True)
         self.corner_template.hide()
+
 
         # Start the first drawing session
         QTimer.singleShot(100, self.start_transition)
 
         # "Saving Data" label
-        self.saving_label = QLabel("Saving Data", self)
+        self.saving_label = QLabel("סיימתם את המטלה. תודה שהשתתפתם!", self)
         self.saving_label.setStyleSheet("color: black; font-size: 48px; font-weight: bold; background-color: white;")
         self.saving_label.setAlignment(Qt.AlignCenter)
         self.saving_label.setGeometry(0, 0, self.width(), self.height())
@@ -97,21 +127,89 @@ class DrawingWidget(QWidget):
         if not self.shapes:
             return False, False, False  # or raise an exception
 
-        choice = random.choice(list(self.shapes))
-        self.shapes.remove(choice)
+        choice = list(random.choice(list(self.shapes)))
+
+        if self.first_shape:
+            self.first_shape = False
+            choice[2] = False # dont hide the template in the first example
+            self.ready_prompt.setText("נגמר הזמן, לחצו להמשך.")
+        else:
+            self.shapes.remove(choice)
         return choice[0], choice[1], choice[2]  # Return the SVG file and speed
 
+    def _drawing_rect(self):
+        """Right rectangle: 2/3 width & height, vertically centered, with margins and gap."""
+        w, h = self.width(), self.height()
+        margin = 10
+        gap = 10
+        rect_h = (2 * h) // 3
+        top = (h - rect_h) // 2
 
-    def paintEvent(self, event):
-        """Renders the lines on the widget."""
-        painter = QPainter(self)
+        left_rect_width = (w - (2 * margin) - gap) // 3
+        right_left = margin + left_rect_width + gap
+        right_width = w - 2 * margin - left_rect_width - gap
+        return QRect(right_left, top, right_width, rect_h)
 
-        # Draw user and example lines
+    def _paint_setup(self, painter):
+        """Place settings/layout only: margins, rectangles, pens, and draw the two frames."""
+        w, h = self.width(), self.height()
+        margin = 10
+        gap = 10
+        rect_h = (2 * h) // 3
+        top = (h - rect_h) // 2
+
+        # Left (no-draw) rectangle
+        left_rect_width = (w - (2 * margin) - gap) // 3
+        r_left = QRect(margin, top, left_rect_width, rect_h)
+
+        # Right (draw) rectangle
+        r_right = self._drawing_rect()
+
+        # Draw both frames
+        pen = QPen(Qt.black, 3, Qt.SolidLine)
+        painter.setPen(pen)
+        painter.drawRect(r_left)
+        painter.drawRect(r_right)
+
+        return r_left, r_right
+
+    def _paint_lines(self, painter, clip_rect):
+        """Draw only the user lines (clipped to clip_rect)."""
+        painter.save()
+        painter.setClipRect(clip_rect.adjusted(2, 2, -2, -2))
+
         for line in self.lines:
             pen = QPen(line['color'], line['width'], Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
             painter.setPen(pen)
-            painter.drawPolyline(*line['points'])
+            pts = line['points']
+            if len(pts) >= 2:
+                painter.drawLine(pts[0], pts[1])
 
+        painter.restore()
+
+    def _position_ready_ui(self):
+        r = self._drawing_rect()  # right 2/3 rectangle
+        pad = 12  # small inner padding
+
+        # Prompt: centered near upper third of the right rect
+        self.ready_prompt.setGeometry(r.x() + pad,
+                                      r.y() + r.height() // 3 - 30,
+                                      r.width() - 2 * pad,
+                                      60 + 100)
+
+        # Button: centered horizontally, mid-rect vertically
+        self.ok_button.move(r.x() + (r.width() - self.ok_button.width()) // 2,
+                            r.y() + r.height() // 2 + 100)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        # 1) Setup/layout (frames, pens, etc.)
+        _, r_right = self._paint_setup(painter)
+
+        # 2) Draw lines only (inside right rectangle)
+        self._paint_lines(painter, r_right)
 
     def start_drawing(self):
         """Begin a new drawing phase."""
@@ -122,23 +220,39 @@ class DrawingWidget(QWidget):
         self.drawing = False
 
     def start_transition(self):
-        """Show the transition message and start the countdown."""
+        """Prompt the user before the next shape is shown."""
         self.play = False
         self.drawing = False
         self.sampling_timer.stop()
         self.clear_canvas()
-        self.transition_timer.start(self.transition_duration)
 
-        shape, speed, hide_template = self.pop_random_shape()
-        if shape:
-            self.example_widget.show_svg(shape, speed)
-            self.corner_template.show_svg(shape, speed, hide_template)
-        else:
-            self.close_file()
+        self.ready_prompt.show()
+        self.ok_button.show()
 
     def start_visual_mask(self):
         self.example_widget.show_svg("assets/mask.svg", "no animation")
         self.start_drawing()
+
+    def _on_ready_clicked(self):
+        self.ready_prompt.hide()
+        self.ok_button.hide()
+
+        self.shape_tuple = self.pop_random_shape()
+        if not self.shape_tuple[0]:
+            self.close_file()
+            return
+
+        QTimer.singleShot(self.transition_duration, self._show_example_shape)
+
+    def _show_example_shape(self):
+        shape, speed, hide_template = self.shape_tuple
+        print(f"Showing shape: {shape}, speed: {speed}, hide_template: {hide_template}")
+        self.example_widget.show_svg(shape, speed)
+
+        if hide_template:
+            self.corner_template.hide()
+        else:
+            self.corner_template.show_svg(shape, speed)
 
 
     def mousePressEvent(self, event):
@@ -213,15 +327,22 @@ class DrawingWidget(QWidget):
 
     def clear_canvas(self):
         """Clear the canvas and reset sampling data."""
+        self.corner_template.hide()
         self.lines = []
         self.data_handler.start_new_section("")
         self.update()
 
+    def resizeEvent(self, event):
+        try:
+            super().resizeEvent(event)
+            self._position_ready_ui()
+        except:
+            pass
 
     def close_file(self):
         self.saving_label.show()  # Display the label
         self.saving_label.repaint()  # Force the label to redraw immediately
         QApplication.processEvents()  # Process any pending GUI events
-        time.sleep(1)  # Wait for 1 seconds to show the label
+        time.sleep(3)  # Wait for 1 seconds to show the label
         self.data_handler.close_file()  # Close the file
         QApplication.quit()  # Quit the application

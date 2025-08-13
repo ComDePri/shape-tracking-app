@@ -20,11 +20,13 @@ class Settings:
 
     def reset(self):
         self.stimuli_duration = 5.0
-        self.drawing_duration = 5.0
+        self.drawing_duration = 40.0
         self.corner_location = [0, 0]
         self.corner_scale = 1.0
         self.shapes = list(range(1, 10))
         self.speeds = ["fast", "medium", "slow", "comfort"]
+        self.templates = [True, False]  # Show Template, Hide Template
+        self.show_intro = True
         self.update_selected_shapes()
 
     def update_selected_shapes(self):
@@ -32,20 +34,22 @@ class Settings:
             (f"assets/shape{i}.svg", speed, template)
             for i in self.shapes
             for speed in self.speeds
-            for template in (False, True)
+            for template in self.templates
         ]
 
     def set(self, stimuli_duration=None, drawing_duration=None,
             corner_location=None, corner_scale=None,
-            shapes=None, speeds=None):
+            shapes=None, speeds=None, templates=None):
         if stimuli_duration is not None:
             self.stimuli_duration = float(stimuli_duration)
         if drawing_duration is not None:
             self.drawing_duration = float(drawing_duration)
-        if corner_location is not None:
-            self.corner_location = corner_location
-        if corner_scale is not None:
-            self.corner_scale = float(corner_scale)
+        # if corner_location is not None:
+        #     self.corner_location = corner_location
+        # if corner_scale is not None:
+        #     self.corner_scale = float(corner_scale)
+        if templates is not None:
+            self.templates = templates
         if shapes is not None:
             self.shapes = shapes
         if speeds is not None:
@@ -80,13 +84,23 @@ class Settings:
                         self.shapes = [int(s.strip()) for s in val.split(',') if s.strip().isdigit()]
                     elif key == "speeds":
                         self.speeds = [s.strip() for s in val.split(',') if s.strip()]
+                    elif key == "template":
+                        saved_templates = [t.strip() for t in val.split(',') if t.strip()]
+                        saved_templates = [
+                            "Show Template" not in saved_templates,
+                            "Hide Template" in saved_templates
+                        ]
+                        self.templates = list(set(saved_templates))
+                    elif key == "show_intro":
+                        self.show_intro = val.lower() == "true"
+
             self.update_selected_shapes()
             print("Loaded settings from file.")
         except Exception as e:
             print(f"Error reading settings.txt: {e}")
 
     # --- Getters (optional) ---
-    def get_stimuli_duration(self):
+    def get_transition_duration(self):
         return self.stimuli_duration
 
     def get_drawing_duration(self):
@@ -106,3 +120,6 @@ class Settings:
 
     def get_selected_shapes(self):
         return self.selected_shapes
+
+    def get_show_intro(self):
+        return self.show_intro
