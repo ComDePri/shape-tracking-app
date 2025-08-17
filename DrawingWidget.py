@@ -180,7 +180,7 @@ class DrawingWidget(QWidget):
         painter.save()
         painter.setClipRect(clip_rect.adjusted(2, 2, -2, -2))
 
-        tail_len = 100
+        tail_len = 30
         lines_to_draw = self.lines[-tail_len:]
         n = len(lines_to_draw)
 
