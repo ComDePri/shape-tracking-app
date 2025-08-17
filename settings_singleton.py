@@ -112,6 +112,9 @@ class Settings:
     def get_corner_scale(self):
         return self.corner_scale
 
+    def get_temp_show_settings(self):
+        return self.templates
+
     def get_shapes(self):
         return self.shapes
 

@@ -85,8 +85,12 @@ class SettingsWindow(QDialog):
         intro_group.setLayout(intro_layout)
         layout.addWidget(intro_group)
 
+        self.intro_checkbox.setChecked(
+            self.values.get("show_intro", "true").lower() == "true"
+        )
+
         # --- Template visibility options ---
-        template_group = QGroupBox("Template Visibility")
+        template_group = QGroupBox("Select Template Visibility Conditions")
         template_layout = QHBoxLayout()
         self.template_checkboxes = {}
 

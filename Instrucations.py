@@ -1,5 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
+from settings_singleton import Settings
+
+settings = Settings()
 
 
 class InstructionsWidget(QWidget):
@@ -9,8 +12,16 @@ class InstructionsWidget(QWidget):
         super().__init__(parent)
 
         # --- Developer-configurable content ---
+
+        num_shapes = len(settings.get_shapes())
+        drawing_duration = int(settings.get_drawing_duration())
+        speeds = len(settings.get_speeds())
+        show_temp = len(settings.get_temp_show_settings())
+        total_time = int(drawing_duration * num_shapes * speeds * show_temp / 60)
+
+
         self.pages = pages or [
-            "ברוכים הבאים, לפניכם טופס אישור השתתפות במטלה. לחצו הבא כדי לעבור אליו","""
+            "ברוכים הבאים, לפניכם טופס אישור השתתפות במטלה. לחצו הבא כדי לעבור אליו",f"""
 <div dir="rtl" style="text-align: left; font-size: 18px; margin: 40px;">
     <b>🧾 הסכמה להשתתפות במחקר</b><br><br>
 
@@ -19,7 +30,7 @@ class InstructionsWidget(QWidget):
     .<br><br>
 
     <b>מה תידרשו לעשות:</b> 
-תציירו תשע צורות בעט דיגיטלי/עכבר, בקצבים שונים ועם או בלי תבנית מוצגת. כל ציור יימשך כ־40 שניות, והמשימה כולה כ־35–45 דקות.
+תציירו {num_shapes} צורות בעט דיגיטלי, בקצבים שונים ועם או בלי תבנית מוצגת. כל ציור יימשך כ־{drawing_duration} שניות, והמשימה כולה כ־{total_time} דקות.
     יינתנו הוראות לפני כל שלב, ותוכלו לקחת הפסקות קצרות לאורך הדרך.<br><br>
 
     <b>הטבות ופיצויים:</b> 
@@ -34,16 +45,16 @@ class InstructionsWidget(QWidget):
     למעט מזהה ייחודי אקראי.<br><br>
 
     <b>משך:</b> 
-    כ־35 דקות.<br><br>
+    כ־{total_time} דקות.<br><br>
 
     <b>ליצירת קשר:</b> 
     יובל הרט, הפקולטה למדעי החברה, האוניברסיטה העברית בירושלים, 
     <a href="mailto:comdepri@mail.huji.ac.il">comdepri@mail.huji.ac.il</a><br><br>
 
-    בלחיצה על כפתור <b>המשך</b>, אתם מאשרים שקראתם והבנתם את האמור לעיל ומסכימים להשתתף במחקר מרצונכם החופשי.
+    בלחיצה על כפתור <b>הבא</b>, אתם מאשרים שקראתם והבנתם את האמור לעיל ומסכימים להשתתף במחקר מרצונכם החופשי.
 </div>
 """,
-            """
+            f"""
 <div dir="rtl" style="text-align: left; font-size: 18px; margin: 40px;">
     <b>ברוכים הבאים למטלת הציורים!</b><br><br>
 
@@ -51,7 +62,7 @@ class InstructionsWidget(QWidget):
     <b>מהיר</b>, <b>בינוני</b>, <b>איטי</b> ו<b>נוח</b>.<br><br>
 
     כל צורה שתראו – עליכם לצייר בצורה מדויקת ככל האפשר, ולחזור על הציור 
-    מספר פעמים עד שיופיע סימון עצירה לאחר <b>40 שניות</b>.<br><br>
+    מספר פעמים עד שיופיע סימון עצירה לאחר <b>{drawing_duration} שניות</b>.<br><br>
 
     לאחר מכן תוחלף הצורה ותתחיל משימה חדשה. 
     בחלק מהמקרים הצורה תוצג גם במהלך הציור, ובחלק אחר תצטרכו לצייר מהזיכרון בלבד.<br><br>

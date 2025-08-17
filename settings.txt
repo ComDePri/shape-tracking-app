@@ -1,6 +1,6 @@
-stimuli_duration=4
-drawing_duration=40
+stimuli_duration=1
+drawing_duration=12
 template=Show Template,Hide Template
-shapes=1,2,3,4,5,6,7,8,9
-speeds=fast,medium
+shapes=1,4,9
+speeds=fast,medium,slow,comfort
 show_intro=true

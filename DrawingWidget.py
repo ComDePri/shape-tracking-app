@@ -1,6 +1,6 @@
 import time
 from PyQt5.QtWidgets import QWidget, QShortcut, QApplication, QLabel, QPushButton
-from PyQt5.QtGui import QPainter, QPen, QKeySequence
+from PyQt5.QtGui import QPainter, QPen, QKeySequence, QColor
 from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF, QRect
 from PyQt5.QtSvg import QSvgRenderer
 from AnimationWidget import AnimationWidget
@@ -67,7 +67,7 @@ class DrawingWidget(QWidget):
 <div dir="rtl" style="text-align: left; font-size: 18px; margin: 40px;">
     <b>דוגמה לציור שיוצג</b><br><br>
 
-    בתמונה הקרובה תראו דוגמה לצורה – לדוגמה, <b>אליפסה</b>.<br>
+    בתמונה הקרובה תראו דוגמה לצורה: <b>אליפסה</b>.<br>
     תתבקשו לצייר אותה בקצב שמופיע על המסך – כמו <b>"קצב בינוני"</b>.<br><br>
 
     מטרתכם היא לחזור על הציור <b>בדיוק מירבי</b> ולמשך הזמן שיופיע על המסך.<br>
@@ -127,11 +127,11 @@ class DrawingWidget(QWidget):
         if not self.shapes:
             return False, False, False  # or raise an exception
 
-        choice = list(random.choice(list(self.shapes)))
+        choice = random.choice(list(self.shapes))
 
         if self.first_shape:
+            choice = ("assets/shape6.svg", "medium", False)
             self.first_shape = False
-            choice[2] = False # dont hide the template in the first example
             self.ready_prompt.setText("נגמר הזמן, לחצו להמשך.")
         else:
             self.shapes.remove(choice)
@@ -173,13 +173,24 @@ class DrawingWidget(QWidget):
 
         return r_left, r_right
 
+    from PyQt5.QtGui import QColor
+
     def _paint_lines(self, painter, clip_rect):
-        """Draw only the user lines (clipped to clip_rect)."""
+        """Draw only the last N user lines with gradient fading."""
         painter.save()
         painter.setClipRect(clip_rect.adjusted(2, 2, -2, -2))
 
-        for line in self.lines:
-            pen = QPen(line['color'], line['width'], Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        tail_len = 100
+        lines_to_draw = self.lines[-tail_len:]
+        n = len(lines_to_draw)
+
+        for i, line in enumerate(lines_to_draw):
+            # Fade from transparent (old) to opaque (new)
+            alpha = int(255 * (i + 1) / n) if n > 0 else 255
+            base_color = QColor(Qt.black)
+            base_color.setAlpha(alpha)
+
+            pen = QPen(base_color, line['width'], Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
             painter.setPen(pen)
             pts = line['points']
             if len(pts) >= 2:
