@@ -2,5 +2,5 @@ stimuli_duration=1
 drawing_duration=12
 template=Show Template,Hide Template
 shapes=1,4,9
-speeds=fast,medium,slow,comfort
+speeds=medium,slow,comfort
 show_intro=true

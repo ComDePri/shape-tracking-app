@@ -13,12 +13,16 @@ class InstructionsWidget(QWidget):
 
         # --- Developer-configurable content ---
 
+
         num_shapes = len(settings.get_shapes())
         drawing_duration = int(settings.get_drawing_duration())
         speeds = len(settings.get_speeds())
         show_temp = len(settings.get_temp_show_settings())
         total_time = int(drawing_duration * num_shapes * speeds * show_temp / 60)
 
+        he = {"fast": "מהיר", "medium": "בינוני", "slow": "איטי", "comfort": "נוח"}
+        lst = [he[s] for s in settings.get_speeds()]
+        speed_text = ", ".join(lst[:-1]) + " ו" + lst[-1] if lst else ""
 
         self.pages = pages or [
             "ברוכים הבאים, לפניכם טופס אישור השתתפות במטלה. לחצו הבא כדי לעבור אליו",f"""
@@ -59,7 +63,7 @@ class InstructionsWidget(QWidget):
     <b>ברוכים הבאים למטלת הציורים!</b><br><br>
 
     במטלה זו תתבקשו לצייר צורות שיוצגו לכם על המסך, בקצבי ציור שונים: 
-    <b>מהיר</b>, <b>בינוני</b>, <b>איטי</b> ו<b>נוח</b>.<br><br>
+    <b>{speed_text}</b>.<br><br>
 
     כל צורה שתראו – עליכם לצייר בצורה מדויקת ככל האפשר, ולחזור על הציור 
     מספר פעמים עד שיופיע סימון עצירה לאחר <b>{drawing_duration} שניות</b>.<br><br>
