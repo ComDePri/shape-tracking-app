@@ -22,7 +22,13 @@ class InstructionsWidget(QWidget):
 
         he = {"fast": "מהיר", "medium": "בינוני", "slow": "איטי", "comfort": "נוח"}
         lst = [he[s] for s in settings.get_speeds()]
-        speed_text = ", ".join(lst[:-1]) + " ו" + lst[-1] if lst else ""
+
+        if not lst:
+            speed_text = ""
+        elif len(lst) == 1:
+            speed_text = lst[0]
+        else:
+            speed_text = ", ".join(lst[:-1]) + " ו" + lst[-1]
 
         self.pages = pages or [
             "ברוכים הבאים, לפניכם טופס אישור השתתפות במטלה. לחצו הבא כדי לעבור אליו",f"""

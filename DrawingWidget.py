@@ -20,6 +20,7 @@ class DrawingWidget(QWidget):
         self.drawing = False
         self.play = False
         self.first_shape = True
+        self.shape_tuple = self.pop_random_shape()
         self.last_point = QPoint()
         self.lines = []
 
@@ -248,7 +249,6 @@ class DrawingWidget(QWidget):
         self.ready_prompt.hide()
         self.ok_button.hide()
 
-        self.shape_tuple = self.pop_random_shape()
         if not self.shape_tuple[0]:
             self.close_file()
             return
@@ -340,7 +340,8 @@ class DrawingWidget(QWidget):
         """Clear the canvas and reset sampling data."""
         self.corner_template.hide()
         self.lines = []
-        self.data_handler.start_new_section("")
+        self.shape_tuple = self.pop_random_shape()
+        self.data_handler.start_new_section(f"{self.shape_tuple}")
         self.update()
 
     def resizeEvent(self, event):

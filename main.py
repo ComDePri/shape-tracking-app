@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.drawing_widget = None
         self.data_handler = None
         self.setWindowTitle("Drawing Task")
-        #self.showFullScreen()
+        self.showFullScreen()
 
         # Stacked Widget to manage multiple screens
         self.stack = QStackedWidget()
