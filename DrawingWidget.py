@@ -20,7 +20,7 @@ class DrawingWidget(QWidget):
         self.drawing = False
         self.play = False
         self.first_shape = True
-        self.shape_tuple = self.pop_random_shape()
+        self.shape_tuple = ("assets/shape6.svg", "medium", False)
         self.last_point = QPoint()
         self.lines = []
 
@@ -129,13 +129,7 @@ class DrawingWidget(QWidget):
             return False, False, False  # or raise an exception
 
         choice = random.choice(list(self.shapes))
-
-        if self.first_shape:
-            choice = ("assets/shape6.svg", "medium", False)
-            self.first_shape = False
-            self.ready_prompt.setText("נגמר הזמן, לחצו להמשך.")
-        else:
-            self.shapes.remove(choice)
+        self.shapes.remove(choice)
         return choice[0], choice[1], choice[2]  # Return the SVG file and speed
 
     def _drawing_rect(self):
@@ -340,7 +334,11 @@ class DrawingWidget(QWidget):
         """Clear the canvas and reset sampling data."""
         self.corner_template.hide()
         self.lines = []
-        self.shape_tuple = self.pop_random_shape()
+        if self.first_shape:
+            self.first_shape = False
+        else:
+            self.ready_prompt.setText("נגמר הזמן, לחצו להמשך.")
+            self.shape_tuple = self.pop_random_shape()
         self.data_handler.start_new_section(f"{self.shape_tuple}")
         self.update()
 
