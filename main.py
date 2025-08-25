@@ -15,6 +15,7 @@ from settings_singleton import Settings
 
 FILE_NAME = "_shape_tracking.json"
 FOLDER = "results/"
+settings = Settings()
 
 
 def create_results_folder():
@@ -39,7 +40,11 @@ class MainWindow(QMainWindow):
         self.drawing_widget = None
         self.data_handler = None
         self.setWindowTitle("Drawing Task")
-        self.showFullScreen()
+
+        if settings.get_full_screen():
+            self.showFullScreen()
+        else:
+            self.showNormal()
 
         # Stacked Widget to manage multiple screens
         self.stack = QStackedWidget()
@@ -52,7 +57,6 @@ class MainWindow(QMainWindow):
     def start_drawing_task(self, participant_name):
         self.participant_name = participant_name
 
-        settings = Settings()
         if settings.get_show_intro():
             self.instructions = InstructionsWidget()
             self.instructions.finished.connect(self.launch_drawing_widget)

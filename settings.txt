@@ -4,3 +4,4 @@ template=Show Template,Hide Template
 shapes=1,4,5,7,8,9
 speeds=medium
 show_intro=true
+full_screen=true

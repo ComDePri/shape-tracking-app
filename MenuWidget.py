@@ -62,15 +62,23 @@ class MenuWidget(QWidget):
 
         self.setLayout(layout)
 
+    # MenuWidget.py — inside class SettingsWindow(QDialog):
     def start_task(self):
         """Start the drawing task and pass the participant name."""
+        # Fullscreen the top-level window (QMainWindow), not the stacked widget
+        win = self.window()
+        if settings.get_full_screen():
+            win.showFullScreen()
+        else:
+            win.showNormal()
+        win.raise_()
+        win.activateWindow()
+
         self.participant_name = self.name_input.text().strip()
-        if self.participant_name:  # Ensure a name is provided
+        if self.participant_name:
             self.switch_to_drawing(self.participant_name)
         else:
-            # Highlight the input field if empty
             self.name_input.setStyleSheet("border: 2px solid red; font-size: 16px;")
-
 
     def open_settings_window(self):
         if self.settings_window.exec_():

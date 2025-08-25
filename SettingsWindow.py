@@ -89,6 +89,21 @@ class SettingsWindow(QDialog):
             self.values.get("show_intro", "true").lower() == "true"
         )
 
+        # --- NEW: Full Screen ---
+        fullscreen_group = QGroupBox()
+        fullscreen_layout = QHBoxLayout()
+
+        self.fullscreen_checkbox = QCheckBox("Full screen")
+        fullscreen_layout.addWidget(self.fullscreen_checkbox)
+
+        fullscreen_group.setLayout(fullscreen_layout)
+        layout.addWidget(fullscreen_group)
+
+        self.fullscreen_checkbox.setChecked(
+            self.values.get("full_screen", "false").lower() == "true"
+        )
+        # -----------------------
+
         # --- Template visibility options ---
         template_group = QGroupBox("Select Template Visibility Conditions")
         template_layout = QHBoxLayout()
@@ -138,7 +153,7 @@ class SettingsWindow(QDialog):
 
             svg = QSvgWidget(path)
             svg.setFixedSize(60, 60)  # increased from 50 to avoid clipping
-            svg.setStyleSheet("background-color: transparent;")  # optional: ensures no weird borders
+            svg.setStyleSheet("background-color: transparent;")  # optional
             shape_layout.addWidget(svg, row, col)
 
             cb = QCheckBox(os.path.basename(path))
@@ -188,7 +203,7 @@ class SettingsWindow(QDialog):
             return {}
 
         values = {}
-        with open(self.SETTINGS_FILE, "r") as f:
+        with open(self.SETTINGS_FILE, "r", encoding="utf-8") as f:
             for line in f:
                 if '=' in line:
                     key, val = line.strip().split('=', 1)
@@ -208,10 +223,12 @@ class SettingsWindow(QDialog):
             f"template={','.join(template)}",
             f"shapes={','.join(shapes)}",
             f"speeds={','.join(selected_speeds)}",
-            f"show_intro={str(self.intro_checkbox.isChecked()).lower()}"
+            f"show_intro={str(self.intro_checkbox.isChecked()).lower()}",
+            # --- NEW: persist full screen flag ---
+            f"full_screen={str(self.fullscreen_checkbox.isChecked()).lower()}",
         ]
 
-        with open(self.SETTINGS_FILE, "w") as f:
+        with open(self.SETTINGS_FILE, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
         print("settings.txt updated.")
         self.accept()
